@@ -66,15 +66,17 @@ def after_login(resp):
 	if resp.email is None or resp.email == "":
 		flash('Invalid login. Please try again.')
 		redirect(url_for('login'))
-		return "Could not login user"
-	print "response email = " + str(resp.email)
 	user = User.query.filter_by(email = resp.email).first()
 	if user is None:
 		nickname = resp.nickname
 		if nickname is None or nickname == "":
 			nickname = resp.email.split('@')[0]
+		nickname = User.make_unique_nickname(nickname)
 		user = User(nickname = nickname, email = resp.email, role = ROLE_USER)
 		db.session.add(user)
+		db.session.commit()
+		# make the user follow him/herself
+		db.session.add(user.follow(user))
 		db.session.commit()
 	remember_me = False
 	if 'remember_me' in session:
@@ -127,6 +129,43 @@ def edit():
 		form.about_me.data = g.user.about_me
 	return render_template('edit.html',
 						form = form)	
+
+@app.route('/follow/<nickname>')
+def follow(nickname):
+	user = User.query.filter_by(nickname = nickname).first()
+	if user == None:
+		flash('User ' + nickname + ' not found.')
+		return redirect(url_for('index'))
+	if user == g.user:
+		flash('You can\'t follow yourself!')
+		return redirect(url_for('user', nickname = nickname))
+	u = g.user.follow(user)
+	if u is None:
+		flash('Cannot follow ' + nickname + '.')
+		return redirect(url_for('user', nickname = nickname))
+	db.session.add(u)
+	db.session.commit()
+	flash('You are now following ' + nickname + '!')
+	return redirect(url_for('user', nickname = nickname))
+
+@app.route('/unfollow/<nickname>')
+def unfollow(nickname):
+	user = User.query.filter_by(nickname = nickname).first()
+	if user == None:
+		flash('User ' + nickname + ' not found.')
+		return redirect(url_for('index'))
+	if user == g.user:
+		flash('You can\'t unfollow yourself!')
+		return redirect(url_for('user', nickname = nickname))
+	u = g.user.unfollow(user)
+	if u is None:
+		flash('Cannot unfollow ' + nickname + '.')
+		return redirect(url_for('user', nickname = nickname))
+	db.session.add(u)
+	db.session.commit()
+	flash('You have stopped following ' + nickname + '.')
+	return redirect(url_for('user', nickname = nickname))
+
 	
 	
 @app.errorhandler(404)
