@@ -8,7 +8,8 @@ OPENID_PROVIDERS = [
     { 'name': 'Yahoo', 'url': 'https://me.yahoo.com' },
     { 'name': 'AOL', 'url': 'http://openid.aol.com/<username>' },
     { 'name': 'Flickr', 'url': 'http://www.flickr.com/<username>' },
-    { 'name': 'MyOpenID', 'url': 'https://www.myopenid.com' }]
+    { 'name': 'MyOpenID', 'url': 'https://www.myopenid.com' },
+    { 'name': 'Paypal', 'url': 'https://www.paypal.com/webapps/auth/server'}]
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
