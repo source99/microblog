@@ -45,19 +45,26 @@ class signupForm(Form):
 		email_regex = re.compile(r"[^@]+@[^@]+\.[^@]+")
 		if not email_regex.match(self.email.data):
 			self.email.errors.append('This is not a valid email address format')
+			print "invalid email - False"
 			return False
 		#check the email address doesn't exist already
 		user = User.query.filter_by(email = self.email.data).first()
 		if user != None:
 			self.email.errors.append('This email is already used')
+			print "email already exists"
 			return False
 		#check its a valid passowrd
 		password_regex = re.compile(r"[a-z]")
 		if not password_regex.match(self.password.data):
 			self.password.errors.append('This password is not valid even though the proper rules have not been defined')
+			print "password not valid"
 			return False
 		return True
 	
-			
+class PostForm(Form):
+	post = TextField('post', validators = [Required()])
+
+class SearchForm(Form):
+	search = TextField('search', validators = [Required()])			
 		
 			
