@@ -1,0 +1,28 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Create your account</h1>
+<form action="" method="post" name="signup">
+    {{form.hidden_tag()}}
+    <table>
+        <tr>
+	        <td>Your email:</td>
+	        <td>
+	            {{form.email(size = 24)}}
+	            {% for error in form.errors.email %}
+	            <br><span style="color: red;">[{{error}}]</span>
+	            {% endfor %}
+	        </td>
+	        </tr>
+        <tr>
+            <td>Password:</td>
+            <td>{{form.password(size=24)}}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Sign Up"></td>
+        </tr>
+    </table>
+</form>
+{% endblock %}

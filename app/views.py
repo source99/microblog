@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, lm, oid
-from forms import LoginForm, EditForm
+from app import app, db, lm
+from forms import LoginForm, EditForm, signupForm
 from models import User, ROLE_USER, ROLE_ADMIN
 from datetime import datetime
 
@@ -42,7 +42,6 @@ def before_request():
 		db.session.commit()
 
 @app.route('/login', methods = ['GET', 'POST'])
-@oid.loginhandler
 def login():
 	if g.user is not None and g.user.is_authenticated():
 		return redirect(url_for('index'))
@@ -50,19 +49,43 @@ def login():
 	if form.validate_on_submit():
 		print "form submitted"
 		session['remember_me'] = form.remember_me.data
-		return oid.try_login(form.openid.data, ask_for = ['nickname', 'email'])
-		print str(form.openid.data)
-#		result = oid.try_login(form.openid.data, ask_for = [ 'email'])
-		print "RESULT = " + str(result)
-		print "END RESULT"
+		#check if query returns valid user then return user object
+		
 		return result
 	return render_template('login.html', 
 		title = 'Sign In',
 		form = form,
 		providers = app.config['OPENID_PROVIDERS'])
 
-@oid.after_login
+
+
+@app.route('/signup', methods = ['GET', 'POST'])
+def signup():
+	print "entering signup form"
+	if g.user is not None and g.user.is_authenticated():
+		return redirect(url_for('index'))
+	form = signupForm()
+	if form.validate_on_submit():
+		print "new user signing up"
+		print "email = " + form.email.data
+		print "password = " + form.password.data
+		u = User(email=form.email.data, password = form.password.data, role = ROLE_USER, nickname = form.password.data)
+		db.session.add(u)
+		db.session.commit()
+		print "user successfully added to DB"
+		login_user(u)
+		return redirect(url_for('index'))
+	else:
+		print "form.validate did not execute"
+	return render_template('signup.html',
+							title = "Sign Up", 
+							form = form)
+		
+
+
+
 def after_login(resp):
+	print "executing after_login - SHOULD NEVER EXECUTE"
 	if resp.email is None or resp.email == "":
 		flash('Invalid login. Please try again.')
 		redirect(url_for('login'))
@@ -130,6 +153,7 @@ def edit():
 	return render_template('edit.html',
 						form = form)	
 
+
 @app.route('/follow/<nickname>')
 def follow(nickname):
 	user = User.query.filter_by(nickname = nickname).first()
@@ -166,8 +190,7 @@ def unfollow(nickname):
 	flash('You have stopped following ' + nickname + '.')
 	return redirect(url_for('user', nickname = nickname))
 
-	
-	
+
 @app.errorhandler(404)
 def internal_error(error):
 	return render_template('404.html'), 404
